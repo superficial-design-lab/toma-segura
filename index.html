@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toma Segura — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:          #000000;
+    --mono:        'DM Mono', monospace;
+    --chip-bg:     rgba(255,255,255,0.08);
+    --chip-border: rgba(255,255,255,0.14);
+    --chip-text:   rgba(255,255,255,0.55);
+    --t-bright:    rgba(255,255,255,1);
+    --t-mid:       rgba(255,255,255,0.55);
+    --t-dim:       rgba(255,255,255,0.55);
+    --t-ghost:     rgba(255,255,255,0.55);
+    --s-card:      rgba(255,255,255,0.04);
+    --s-hover:     rgba(255,255,255,0.07);
+    --line:        rgba(255,255,255,0.08);
+    --line-hover:  rgba(255,255,255,0.18);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--mono);
+    background: var(--bg);
+    color: #fff;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* grid backdrop */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative; z-index: 1;
+    max-width: 1100px; margin: 0 auto; padding: 0 32px;
+  }
+
+  /* ── LOGO ── */
+  .logo-bar { padding: 40px 0 0; }
+  .logo-bar img { height: 20px; width: auto; opacity: 0.9; display: block; }
+
+  /* ── HEADER ── */
+  header { padding: 32px 0 0; }
+
+  .title {
+    font-size: clamp(38px, 6vw, 66px);
+    font-weight: 400; line-height: 0.94; letter-spacing: -2px;
+    color: #fff; text-transform: uppercase;
+  }
+  .title span {
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.18);
+  }
+
+  .subtitle {
+    font-size: 13px; font-weight: 300; color: var(--t-mid);
+    margin-top: 24px; max-width: 380px; line-height: 1.9;
+    text-transform: uppercase;
+  }
+
+  .meta-row {
+    display: flex; flex-wrap: wrap;
+    margin-top: 8px; padding-top: 28px;
+    border-top: 1px solid var(--line);
+    margin-bottom: 28px;
+  }
+  .meta-item {
+    font-size: 11px; color: var(--t-mid);
+    padding-right: 24px; margin-right: 24px;
+    border-right: 1px solid var(--line);
+    display: flex; align-items: center; gap: 7px; line-height: 1;
+  }
+  .meta-item:last-child { border-right: none; }
+  .meta-item strong { color: var(--t-bright); font-weight: 400; }
+  .meta-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--t-dim); }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--t-dim); margin: 60px 0 14px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+  /* ══════════════════════════════════════
+     BIG CARD — contenedor principal
+     ══════════════════════════════════════ */
+  .big-card {
+    background: var(--s-card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    position: relative;
+    animation: up 0.42s ease both;
+  }
+  .big-card::after {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+  }
+
+  /* Card top — título + tabs nav */
+  .big-card-head {
+    padding: 32px 32px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .big-card-title {
+    font-size: 22px; font-weight: 400; letter-spacing: -0.5px;
+    color: var(--t-bright); text-transform: none;
+    margin-bottom: 28px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  .big-card-title .icon {
+    font-size: 22px;
+    filter: grayscale(1) brightness(1.4); opacity: 0.55;
+    line-height: 1;
+  }
+
+  /* ── TABS NAV inside big card ── */
+  .tabs-nav {
+    display: flex; gap: 0;
+  }
+
+  .tab-btn {
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    padding: 12px 22px;
+    background: transparent; border: none;
+    border-bottom: 1px solid transparent;
+    color: var(--t-dim); cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    margin-bottom: -1px;
+  }
+  .tab-btn:hover { color: var(--t-mid); background: rgba(255,255,255,0.02); }
+  .tab-btn.active {
+    color: var(--t-bright);
+    border-bottom-color: rgba(255,255,255,0.55);
+  }
+
+  /* ── TAB PANELS ── */
+  .tab-body { padding: 32px; }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ══════════════════════════════════════
+     INFO GENERAL — 3 cards estilo social
+     ══════════════════════════════════════ */
+  .web-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .web-info-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px;
+    text-decoration: none; color: inherit;
+    display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+    transition: transform 0.22s ease, border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  }
+  .web-info-card::after {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 0.32s ease;
+  }
+  .web-info-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--line-hover);
+    background: var(--s-hover);
+    box-shadow: 0 20px 52px rgba(0,0,0,0.6);
+  }
+  .web-info-card:hover::after { transform: scaleX(1); }
+
+  .web-info-card .card-icon {
+    font-size: 22px; margin-bottom: 14px; margin-top: 4px;
+    filter: grayscale(1) brightness(1.4); opacity: 0.55;
+  }
+  .web-info-card .card-type {
+    font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--t-ghost); margin-bottom: 6px;
+  }
+  .web-info-card .card-name {
+    font-size: 14px; font-weight: 500; color: var(--t-bright);
+    line-height: 1.2; margin-bottom: 8px; flex: 1;
+  }
+  .web-info-card .card-foot {
+    display: flex; align-items: center; justify-content: flex-end;
+    margin-top: auto; padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+  .web-info-card:hover .card-cta { color: #fff; letter-spacing: 0.5px; }
+
+  /* ══════════════════════════════════════
+     ANÁLISIS — month links
+     ══════════════════════════════════════ */
+  .year-tabs-nav {
+    display: flex; gap: 0;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 20px;
+  }
+  .year-btn {
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    padding: 10px 20px;
+    background: transparent; border: none;
+    border-bottom: 1px solid transparent;
+    color: var(--t-dim); cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    margin-bottom: -1px;
+  }
+  .year-btn:hover { color: var(--t-mid); }
+  .year-btn.active { color: var(--t-bright); border-bottom-color: rgba(255,255,255,0.55); }
+
+  .year-panel { display: none; }
+  .year-panel.active {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0 32px;
+  }
+
+  .month-link {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--chip-bg);
+    font-family: var(--mono);
+    font-size: 11px; font-weight: 400; letter-spacing: 0.3px;
+    color: var(--t-mid);
+    text-decoration: none;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .month-link:hover {
+    border-color: var(--line-hover);
+    color: var(--t-bright);
+    background: var(--s-hover);
+  }
+  .month-link.pending { opacity: 0.3; pointer-events: none; cursor: default; }
+  .month-dot {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--t-mid); flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .month-link:hover .month-dot { background: var(--t-bright); }
+
+  /* ── MONTH GROUP (subtítulo + links) ── */
+  .month-group {
+    margin-bottom: 20px;
+  }
+  .month-group:last-child { margin-bottom: 0; }
+
+  .month-title {
+    font-size: 11px; letter-spacing: 0.5px;
+    color: #fff; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 400;
+  }
+  .month-title::after {
+    content: ''; flex: 1; height: 1px;
+    background: rgba(255,255,255,0.08);
+  }
+
+  .month-links {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+
+  /* ══════════════════════════════════════
+     SOCIAL — mini cards dentro del tab
+     ══════════════════════════════════════ */
+  .social-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 0;
+  }
+
+  .social-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px;
+    text-decoration: none; color: inherit;
+    display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+    transition: transform 0.22s ease, border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  }
+  .social-card::after {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 0.32s ease;
+  }
+  .social-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--line-hover);
+    background: var(--s-hover);
+    box-shadow: 0 20px 52px rgba(0,0,0,0.6);
+  }
+  .social-card:hover::after { transform: scaleX(1); }
+
+  .social-bar {
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    border-radius: 10px 10px 0 0;
+  }
+  .bar-fb { background: #1877f2; }
+  .bar-ig { background: linear-gradient(90deg,#f58529,#dd2a7b,#8134af); }
+  .bar-li { background: #0a66c2; }
+  .bar-yt { background: #ff0000; }
+
+  .social-card .card-icon {
+    font-size: 22px; margin-bottom: 14px; margin-top: 6px;
+    filter: grayscale(1) brightness(1.4); opacity: 0.55;
+  }
+  .social-card .card-type {
+    font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--t-ghost); margin-bottom: 6px;
+  }
+  .social-card .card-name {
+    font-size: 14px; font-weight: 500; color: var(--t-bright);
+    line-height: 1.2; margin-bottom: 8px;
+  }
+  .social-card .card-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: auto; padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+  .card-ver { font-size: 10px; color: var(--t-dim); letter-spacing: 0.8px; }
+  .card-cta { font-size: 11px; color: var(--t-mid); transition: color 0.2s, letter-spacing 0.2s; }
+  .social-card:hover .card-cta { color: #fff; letter-spacing: 0.5px; }
+
+  /* ══════════════════════════════════════
+     PARRILLA — mini cards 2 cols
+     ══════════════════════════════════════ */
+  .parrilla-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .p-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px;
+    text-decoration: none; color: inherit;
+    display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+    transition: transform 0.22s ease, border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  }
+  .p-card::after {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 0.32s ease;
+  }
+  .p-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--line-hover);
+    background: var(--s-hover);
+    box-shadow: 0 20px 52px rgba(0,0,0,0.6);
+  }
+  .p-card:hover::after { transform: scaleX(1); }
+
+  .p-card .card-icon {
+    font-size: 22px; margin-bottom: 16px;
+    filter: grayscale(1) brightness(1.4); opacity: 0.55;
+  }
+  .p-card .card-type {
+    font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--t-ghost); margin-bottom: 6px;
+  }
+  .p-card .card-name {
+    font-size: 15px; font-weight: 500; color: var(--t-bright);
+    margin-bottom: 8px;
+  }
+  .p-card .card-desc {
+    font-size: 12px; font-weight: 300; color: var(--t-mid);
+    line-height: 1.85; flex: 1;
+  }
+  .chips { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 14px; }
+  .chip {
+    font-size: 10px; padding: 3px 9px; border-radius: 3px;
+    background: var(--chip-bg); border: 1px solid var(--chip-border);
+    color: var(--chip-text);
+  }
+  .p-card .card-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 16px; padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+  .p-card:hover .card-cta { color: #fff; letter-spacing: 0.5px; }
+
+  /* ── Divider between sub-sections inside tab ── */
+  .inner-divider {
+    font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--t-ghost);
+    display: flex; align-items: center; gap: 12px;
+    margin: 28px 0 16px;
+  }
+  .inner-divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.05); }
+
+  /* ── FOOTER ── */
+  footer {
+    margin-top: 80px; padding: 26px 0 48px;
+    border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .foot-logo { font-size: 11px; color: var(--t-dim); letter-spacing: 2px; }
+  .foot-note { font-size: 11px; color: var(--t-ghost); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes up {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .logo-bar  { animation: up 0.4s ease both; animation-delay: 0.00s; }
+  header     { animation: up 0.4s ease both; animation-delay: 0.06s; }
+  .big-card:nth-of-type(1) { animation-delay: 0.12s; }
+  .big-card:nth-of-type(2) { animation-delay: 0.20s; }
+  .big-card:nth-of-type(3) { animation-delay: 0.28s; }
+
+  /* ══════════════════════════════════════
+     COMUNICACIÓN — grid de materiales
+     ══════════════════════════════════════ */
+  .com-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+
+  .com-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+    transition: transform 0.22s ease, border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  }
+  .com-card::after {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 0.32s ease;
+  }
+  .com-card:hover {
+    border-color: var(--line-hover);
+    background: var(--s-hover);
+  }
+  .com-card:hover::after { transform: scaleX(1); }
+
+  .com-card .card-icon {
+    font-size: 20px; margin-bottom: 12px; margin-top: 2px;
+    filter: grayscale(1) brightness(1.4); opacity: 0.55;
+  }
+  .com-card .card-name {
+    font-size: 13px; font-weight: 500; color: var(--t-bright);
+    line-height: 1.2; margin-bottom: 14px; flex: 1;
+  }
+  .com-links {
+    display: flex; flex-direction: column; gap: 6px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+  .com-link {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.3px;
+    color: var(--t-mid);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .com-link:hover { color: var(--t-bright); }
+  /* ── VISUALES — filas con label + botón ── */
+  .vis-items {
+    display: flex; flex-direction: column; gap: 0;
+    margin-top: 16px;
+    border-top: 1px solid var(--line);
+  }
+  .vis-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .vis-item:last-child { border-bottom: none; }
+  .vis-label {
+    font-size: 11px; color: var(--t-mid); letter-spacing: 0.3px;
+  }
+  .vis-cta {
+    font-size: 11px; color: var(--t-mid);
+    text-decoration: none;
+    transition: color 0.2s, letter-spacing 0.2s;
+  }
+  .vis-cta { text-decoration: none; }
+  .vis-cta:hover { color: #fff; letter-spacing: 0.5px; }
+
+  .com-link .com-dot {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--t-mid); flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .com-link:hover .com-dot { background: var(--t-bright); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 780px) {
+    .wrap { padding: 0 20px; }
+    .social-grid { grid-template-columns: repeat(2,1fr); }
+    .web-info-grid { grid-template-columns: repeat(2,1fr); }
+    .com-grid { grid-template-columns: repeat(2,1fr); }
+    .year-panel.active { grid-template-columns: 1fr; }
+    .parrilla-grid { grid-template-columns: 1fr; }
+    .info-row { grid-template-columns: 1fr; }
+    .info-cell { border-right: none; border-bottom: 1px solid var(--line); }
+    .info-cell:last-child { border-bottom: none; }
+    .meta-item { border-right: none; padding-right: 0; margin-bottom: 10px; }
+    .tab-body { padding: 20px; }
+    .big-card-head { padding: 24px 20px 0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- LOGOTIPO -->
+  <div class="logo-bar">
+    <img width="200px" src="logotipo.png" alt="superficial">
+  </div>
+
+  <!-- HEADER -->
+  <header>
+    <div class="title">Document Warehouse<br><span>Toma Segura.</span></div>
+    <div class="meta-row">
+      <div class="meta-item"><div class="meta-dot"></div><strong>Actualización</strong>&nbsp;· Mar 2026</div>
+    </div>
+  </header>
+
+
+  <!-- ══════════════════════════════════════
+       BIG CARD 1 — SITIO WEB
+       ══════════════════════════════════════ -->
+  <div class="big-card">
+    <div class="big-card-head">
+      <div class="big-card-title">
+        <span class="icon">🌐</span>Sitio Web
+      </div>
+      <div class="tabs-nav">
+        <button class="tab-btn active" data-tab="web-info"     onclick="switchTab(this,'web-card-tabs')">Información general</button>
+        <button class="tab-btn"        data-tab="web-audiencia" onclick="switchTab(this,'web-card-tabs')">Análisis de audiencia</button>
+      </div>
+    </div>
+
+    <div class="tab-body" id="web-card-tabs">
+
+      <!-- TAB: Información general -->
+      <div class="tab-panel active" data-panel="web-info">
+        <div class="web-info-grid">
+
+          <a href="https://tomasegura.com/" target="_blank" class="web-info-card">
+            <span class="card-icon">🌐</span>
+            <div class="card-name">Sitio Web</div>
+            <div class="card-foot">
+              <span class="card-cta">Ver →</span>
+            </div>
+          </a>
+
+          <a href="https://tomasegura.com/noticias" target="_blank" class="web-info-card">
+            <span class="card-icon">📰</span>
+            <div class="card-name">Noticias</div>
+            <div class="card-foot">
+              <span class="card-cta">Ver →</span>
+            </div>
+          </a>
+
+          <a href="https://comunidad.tomasegura.com/login" target="_blank" class="web-info-card">
+            <span class="card-icon">👥</span>
+            <div class="card-name">Comunidad de práctica</div>
+            <div class="card-foot">
+              <span class="card-cta">Ver →</span>
+            </div>
+          </a>
+
+        </div>
+      </div>
+
+      <!-- TAB: Análisis de audiencia -->
+      <div class="tab-panel" data-panel="web-audiencia">
+        <div class="year-tabs-nav">
+          <button class="year-btn" data-ytab="wa-2024" onclick="switchYear(this,'wa-years')">2024</button>
+          <button class="year-btn" data-ytab="wa-2025" onclick="switchYear(this,'wa-years')">2025</button>
+          <button class="year-btn active" data-ytab="wa-2026" onclick="switchYear(this,'wa-years')">2026</button>
+        </div>
+        <div id="wa-years">
+          <div class="year-panel" data-ypanel="wa-2024">
+            <div class="month-group"><div class="month-title">Enero</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Febrero</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Marzo</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Abril</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Mayo</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Junio</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Julio</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Agosto</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Septiembre</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Octubre</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Noviembre</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Diciembre</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+          </div>
+          <div class="year-panel" data-ypanel="wa-2025">
+            <div class="month-group"><div class="month-title">Enero</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Febrero</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Marzo</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Abril</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Mayo</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Junio</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Julio</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Agosto</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Septiembre</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Octubre</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Noviembre</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Diciembre</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Dashboard</a><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+          </div>
+          <div class="year-panel active" data-ypanel="wa-2026">
+            <div class="month-group"><div class="month-title">Enero</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Dashboard</a><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Febrero</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Dashboard</a><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Marzo</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Dashboard</a><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Abril</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Dashboard</a><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Mayo</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Dashboard</a><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Junio</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Dashboard</a><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Julio</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Dashboard</a><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Agosto</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Dashboard</a><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Septiembre</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Dashboard</a><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Octubre</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Dashboard</a><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Noviembre</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Dashboard</a><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Diciembre</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Dashboard</a><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-body -->
+  </div><!-- /big-card sitio web -->
+
+
+  <!-- ══════════════════════════════════════
+       BIG CARD 2 — REDES SOCIALES
+       ══════════════════════════════════════ -->
+  <div class="big-card">
+    <div class="big-card-head">
+      <div class="big-card-title">
+        <span class="icon">📱</span>Redes Sociales
+      </div>
+      <div class="tabs-nav">
+        <button class="tab-btn active" data-tab="soc-info"      onclick="switchTab(this,'soc-card-tabs')">Información general</button>
+        <button class="tab-btn"        data-tab="soc-audiencia" onclick="switchTab(this,'soc-card-tabs')">Análisis de audiencia</button>
+        <button class="tab-btn"        data-tab="soc-parrilla"  onclick="switchTab(this,'soc-card-tabs')">Parrilla de contenido</button>
+      </div>
+    </div>
+
+    <div class="tab-body" id="soc-card-tabs">
+
+      <!-- TAB: Información general -->
+      <div class="tab-panel active" data-panel="soc-info">
+        <div class="social-grid">
+
+          <a href="#" target="_blank" class="social-card">
+            <span class="card-icon">📘</span>
+            <div class="card-name">Facebook</div>
+            <div class="card-foot">
+              <span class="card-cta">Ver →</span>
+            </div>
+          </a>
+
+          <a href="https://www.instagram.com/toma.segura/" target="_blank" class="social-card">
+            <span class="card-icon">📸</span>
+            <div class="card-name">Instagram</div>
+            <div class="card-foot">
+              <span class="card-cta">Ver →</span>
+            </div>
+          </a>
+
+          <a href="https://www.linkedin.com/company/tomasegura" target="_blank" class="social-card">
+            <span class="card-icon">💼</span>
+            <div class="card-name">LinkedIn</div>
+            <div class="card-foot">
+              <span class="card-cta">Ver →</span>
+            </div>
+          </a>
+
+          <a href="https://www.youtube.com/@TomaSegurayt" target="_blank" class="social-card">
+            <span class="card-icon">▶️</span>
+            <div class="card-name">YouTube</div>
+            <div class="card-foot">
+              <span class="card-cta">Ver →</span>
+            </div>
+          </a>
+
+        </div>
+      </div>
+
+      <!-- TAB: Parrilla de contenido -->
+      <div class="tab-panel" data-panel="soc-parrilla">
+        <div class="parrilla-grid">
+
+          <a href="https://docs.google.com/spreadsheets/d/1BI5cuOvcFm4GaNJ_P831dlOU9YNFs8lk/edit?gid=1306150775#gid=1306150775" target="_blank" class="p-card">
+            <span class="card-icon">📊</span>
+            <div class="card-name">Parrilla</div>
+            <p class="card-desc">Calendario editorial con publicaciones programadas, plataforma, copy y estado de aprobación.</p>
+            <div class="chips">
+              <span class="chip">Calendario</span>
+              <span class="chip">Editorial</span>
+              <span class="chip">Aprobado</span>
+            </div>
+            <div class="card-foot">
+              <span class="card-ver">Excel · Drive</span>
+              <span class="card-cta">Abrir →</span>
+            </div>
+          </a>
+
+          <div class="p-card">
+            <span class="card-icon">🎬</span>
+            <div class="card-name">Visuales</div>
+            <p class="card-desc">Piezas aprobadas para publicación: reels, historias, posts entre otros.</p>
+            <div class="chips">
+              <span class="chip">Aprobado</span>
+              <span class="chip">Digital</span>
+            </div>
+            <div class="card-foot">
+              <span class="card-ver">Reels · Historias · Posts</span>
+              <a href="#" target="_blank" class="card-cta" style="text-decoration:none;">Abrir →</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- TAB: Análisis de audiencia -->
+      <div class="tab-panel" data-panel="soc-audiencia">
+        <div class="year-tabs-nav">
+          <button class="year-btn" data-ytab="sa-2024" onclick="switchYear(this,'sa-years')">2024</button>
+          <button class="year-btn" data-ytab="sa-2025" onclick="switchYear(this,'sa-years')">2025</button>
+          <button class="year-btn active" data-ytab="sa-2026" onclick="switchYear(this,'sa-years')">2026</button>
+        </div>
+        <div id="sa-years">
+          <div class="year-panel" data-ypanel="sa-2024">
+            <div class="month-group"><div class="month-title">Enero</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Febrero</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Marzo</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Abril</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Mayo</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Junio</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Julio</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Agosto</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Septiembre</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Octubre</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Noviembre</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Diciembre</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+          </div>
+          <div class="year-panel" data-ypanel="sa-2025">
+            <div class="month-group"><div class="month-title">Enero</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Febrero</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Marzo</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Abril</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Mayo</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Junio</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Julio</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Agosto</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Septiembre</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Octubre</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Noviembre</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Diciembre</div><div class="month-links"><a href="#" target="_blank" class="month-link"><span class="month-dot"></span>Ver Reporte</a></div></div>
+          </div>
+          <div class="year-panel active" data-ypanel="sa-2026">
+            <div class="month-group"><div class="month-title">Enero</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Febrero</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Marzo</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Abril</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Mayo</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Junio</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Julio</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Agosto</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Septiembre</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Octubre</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Noviembre</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+            <div class="month-group"><div class="month-title">Diciembre</div><div class="month-links"><a class="month-link pending"><span class="month-dot"></span>Ver Reporte</a></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-body -->
+  </div><!-- /big-card redes sociales -->
+
+
+  <!-- ══════════════════════════════════════
+       BIG CARD 3 — COMUNICACIÓN
+       ══════════════════════════════════════ -->
+  <div class="big-card">
+    <div class="big-card-head">
+      <div class="big-card-title">
+        <span class="icon">📁</span>Comunicación
+      </div>
+    </div>
+
+    <div class="tab-body">
+      <div class="com-grid">
+
+        <div class="com-card">
+          <span class="card-icon">📅</span>
+          <div class="card-name">Calendarios</div>
+          <div class="com-links">
+            <a href="#" target="_blank" class="com-link"><span class="com-dot"></span>Editables</a>
+            <a href="#" target="_blank" class="com-link"><span class="com-dot"></span>Visuales</a>
+          </div>
+        </div>
+
+        <div class="com-card">
+          <span class="card-icon">📄</span>
+          <div class="card-name">One Pagers</div>
+          <div class="com-links">
+            <a href="#" target="_blank" class="com-link"><span class="com-dot"></span>Editables</a>
+            <a href="#" target="_blank" class="com-link"><span class="com-dot"></span>Visuales</a>
+          </div>
+        </div>
+
+        <div class="com-card">
+          <span class="card-icon">📢</span>
+          <div class="card-name">Convocatoria 2026</div>
+          <div class="com-links">
+            <a href="#" target="_blank" class="com-link"><span class="com-dot"></span>Editables</a>
+            <a href="#" target="_blank" class="com-link"><span class="com-dot"></span>Visuales</a>
+          </div>
+        </div>
+
+        <div class="com-card">
+          <span class="card-icon">✉️</span>
+          <div class="card-name">Invitaciones</div>
+          <div class="com-links">
+            <a href="#" target="_blank" class="com-link"><span class="com-dot"></span>Editables</a>
+            <a href="#" target="_blank" class="com-link"><span class="com-dot"></span>Visuales</a>
+          </div>
+        </div>
+
+        <div class="com-card">
+          <span class="card-icon">📊</span>
+          <div class="card-name">Infografías</div>
+          <div class="com-links">
+            <a href="#" target="_blank" class="com-link"><span class="com-dot"></span>Editables</a>
+            <a href="#" target="_blank" class="com-link"><span class="com-dot"></span>Visuales</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div><!-- /big-card comunicación -->
+
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="foot-logo">Superficial + Toma Segura</div>
+    <div class="foot-note">Documentación confidencial · Uso interno · Mar 2026</div>
+  </footer>
+
+</div><!-- /wrap -->
+
+<script>
+  function switchTab(btn, containerId) {
+    const nav = btn.closest('.tabs-nav');
+    nav.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const container = document.getElementById(containerId);
+    const target = btn.dataset.tab;
+    container.querySelectorAll(':scope > .tab-panel').forEach(p => {
+      p.classList.toggle('active', p.dataset.panel === target);
+    });
+  }
+
+  function switchYear(btn, containerId) {
+    const nav = btn.closest('.year-tabs-nav');
+    nav.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const container = document.getElementById(containerId);
+    const target = btn.dataset.ytab;
+    container.querySelectorAll('.year-panel').forEach(p => {
+      p.classList.toggle('active', p.dataset.ypanel === target);
+    });
+  }
+</script>
+</body>
+</html>
